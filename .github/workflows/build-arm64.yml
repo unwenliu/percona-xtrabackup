@@ -127,7 +127,8 @@ jobs:
               git \
               perl \
               perl-JSON \
-              perl-Time-HiRes
+              perl-Time-HiRes \
+              diffutils
 
             echo "=== Verifying installations ==="
             gcc --version
