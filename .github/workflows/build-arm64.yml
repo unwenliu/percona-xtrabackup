@@ -44,24 +44,62 @@ jobs:
           # Docker 应该已经预装在 ARM64 runner 上
           docker version
 
+      - name: Cache Docker image
+        id: docker-cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/docker-image.tar
+          key: docker-image-${{ env.BASE_IMAGE }}-${{ hashFiles('.github/workflows/build-arm64.yml') }}
+          restore-keys: |
+            docker-image-${{ env.BASE_IMAGE }}-
+
       - name: Pull base image
         run: |
-          echo "Pulling base image: ${{ env.BASE_IMAGE }}"
-          docker pull ${{ env.BASE_IMAGE }}
+          echo "Checking for cached Docker image: ${{ env.BASE_IMAGE }}"
+
+          if [ -f /tmp/docker-image.tar ]; then
+            echo "Loading Docker image from cache..."
+            docker load -i /tmp/docker-image.tar || {
+              echo "Cache load failed, pulling from registry..."
+              docker pull ${{ env.BASE_IMAGE }}
+            }
+          else
+            echo "No cache found, pulling base image: ${{ env.BASE_IMAGE }}"
+            docker pull ${{ env.BASE_IMAGE }}
+
+            echo "Saving Docker image to cache..."
+            docker save ${{ env.BASE_IMAGE }} -o /tmp/docker-image.tar
+          fi
+
+          echo "Verifying Docker image..."
+          docker images | grep percona-xtrabackup || docker images | grep -E "kylin|BASE_IMAGE"
 
       - name: Create build container
         run: |
           docker create --name xtrabackup-builder \
             -v ${{ github.workspace }}:/workspace/percona-xtrabackup \
+            -v /tmp/yum-cache:/tmp/yum-cache \
             ${{ env.BASE_IMAGE }} \
             sleep infinity
 
           docker start xtrabackup-builder
 
+      - name: Cache yum packages
+        uses: actions/cache@v4
+        with:
+          path: /tmp/yum-cache
+          key: yum-cache-${{ env.BASE_IMAGE }}-${{ hashFiles('.github/workflows/build-arm64.yml') }}
+          restore-keys: |
+            yum-cache-${{ env.BASE_IMAGE }}-
+
       - name: Install build dependencies in container
         run: |
           docker exec xtrabackup-builder bash -c '
             set -e
+            echo "=== Setting up yum cache ==="
+            mkdir -p /tmp/yum-cache
+            echo "keepcache=1" >> /etc/yum.conf
+
             echo "=== Updating package lists ==="
             yum makecache --timer
 
@@ -118,7 +156,7 @@ jobs:
                   -DDOWNLOAD_BOOST=ON \
                   -DBUILD_CONFIG=xtrabackup_release \
                   -DWITH_MAN_PAGES=OFF \
-                  -B ..
+                  -S .. -B .
 
             echo "=== Building with make ==="
             make -j$(nproc)
@@ -139,7 +177,10 @@ jobs:
 
             echo "=== Creating tar.gz package ==="
             cd /workspace
-            VERSION="${{ env.XTRABACKUP_VERSION }}"
+
+            # Extract version from XB_VERSION file
+            source /workspace/percona-xtrabackup/XB_VERSION
+            VERSION="${XB_VERSION_MAJOR}.${XB_VERSION_MINOR}.${XB_VERSION_PATCH}${XB_VERSION_EXTRA}"
             PACKAGE_NAME="percona-xtrabackup-${VERSION}-linux-arm64"
 
             # Create package directory
