@@ -100,14 +100,23 @@ jobs:
             set -e
             cd /workspace/percona-xtrabackup
 
+            echo "=== Fixing git safe directory ==="
+            git config --global --add safe.directory /workspace/percona-xtrabackup
+
             echo "=== Creating build directory ==="
             mkdir -p build
             cd build
+
+            echo "=== Downloading Boost ==="
+            BOOST_DIR=/workspace/boost
+            mkdir -p ${BOOST_DIR}
 
             echo "=== Running CMake configuration ==="
             cmake -DBUILD_CONFIG=xtrabackup_release \
                   -DCMAKE_INSTALL_PREFIX=/usr/local/xtrabackup \
                   -DWITH_MAN_PAGES=OFF \
+                  -DDOWNLOAD_BOOST=1 \
+                  -DWITH_BOOST=${BOOST_DIR} \
                   ..
 
             echo "=== Building with make ==="
