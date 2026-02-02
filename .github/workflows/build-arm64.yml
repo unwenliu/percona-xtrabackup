@@ -157,18 +157,18 @@ jobs:
             mkdir -p build
             cd build
 
-            echo "=== Installing GCC Toolset 12 from Aliyun Rocky Linux 8 repo ==="
+            echo "=== Installing GCC Toolset 12 from Rocky Linux 8 official repo ==="
             # Install required packages
             yum install -y scl-utils scl-utils-build
 
-            # Add Aliyun Rocky Linux 8 BaseOS repo
-            printf "[aliyun-rocky8-baseos]\\nname=Aliyun Rocky Linux 8 BaseOS\\nbaseurl=https://mirrors.aliyun.com/rockylinux/8/BaseOS/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/aliyun-rocky8-baseos.repo
+            # Add Rocky Linux 8 official BaseOS repo
+            printf "[rocky8-baseos]\\nname=Rocky Linux 8 BaseOS\\nbaseurl=https://dl.rockylinux.org/pub/rocky/8/BaseOS/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/rocky8-baseos.repo
 
-            # Add Aliyun Rocky Linux 8 AppStream repo
-            printf "[aliyun-rocky8-appstream]\\nname=Aliyun Rocky Linux 8 AppStream\\nbaseurl=https://mirrors.aliyun.com/rockylinux/8/AppStream/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/aliyun-rocky8-appstream.repo
+            # Add Rocky Linux 8 official AppStream repo
+            printf "[rocky8-appstream]\\nname=Rocky Linux 8 AppStream\\nbaseurl=https://dl.rockylinux.org/pub/rocky/8/AppStream/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/rocky8-appstream.repo
 
-            # Add Aliyun Rocky Linux 8 Devel repo (for gcc-toolset)
-            printf "[aliyun-rocky8-devel]\\nname=Aliyun Rocky Linux 8 Devel\\nbaseurl=https://mirrors.aliyun.com/rockylinux/8/Devel/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/aliyun-rocky8-devel.repo
+            # Add Rocky Linux 8 official Devel repo (for gcc-toolset)
+            printf "[rocky8-devel]\\nname=Rocky Linux 8 Devel\\nbaseurl=https://dl.rockylinux.org/pub/rocky/8/Devel/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/rocky8-devel.repo
 
             # Clean and rebuild cache
             yum clean all
