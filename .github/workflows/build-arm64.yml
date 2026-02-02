@@ -22,7 +22,6 @@ jobs:
         with:
           ref: ${{ env.XTRABACKUP_VERSION }}
           fetch-depth: 0
-          submodules: recursive
 
       - name: Display version and system info
         run: |
@@ -73,22 +72,24 @@ jobs:
               cmake \
               make \
               bison \
-              flex \
-              libaio-devel \
               libaio \
+              libaio-devel \
+              automake \
+              autoconf \
+              libtool \
               ncurses-devel \
-              zlib-devel \
               libgcrypt-devel \
-              libcurl-devel \
               libev-devel \
-              procps-devel \
-              python3-sphinx \
+              libcurl-devel \
+              zlib-devel \
+              openssl-devel \
+              zstd \
               vim-common \
+              procps-ng-devel \
               git \
               perl \
               perl-JSON \
-              perl-Time-HiRes \
-              openssl-devel
+              perl-Time-HiRes
 
             echo "=== Verifying installations ==="
             gcc --version
@@ -102,46 +103,22 @@ jobs:
             set -e
             cd /workspace/percona-xtrabackup
 
-            echo "=== Fixing git safe directory ==="
-            git config --global --add safe.directory /workspace/percona-xtrabackup
+            echo "=== Initializing git submodules ==="
+            git submodule update --init --recursive
 
             echo "=== Creating build directory ==="
             mkdir -p build
             cd build
 
-            echo "=== Downloading Boost ==="
-            BOOST_DIR=/workspace/boost
-            mkdir -p ${BOOST_DIR}
-
             echo "=== Running CMake configuration ==="
-            cmake -DBUILD_CONFIG=xtrabackup_release \
-                  -DCMAKE_INSTALL_PREFIX=/usr/local/xtrabackup \
+            cmake -DWITH_BOOST=/workspace/boost \
+                  -DDOWNLOAD_BOOST=ON \
+                  -DBUILD_CONFIG=xtrabackup_release \
                   -DWITH_MAN_PAGES=OFF \
-                  -DDOWNLOAD_BOOST=1 \
-                  -DWITH_BOOST=${BOOST_DIR} \
-                  ..
+                  -B ..
 
             echo "=== Building with make ==="
-            cd /workspace/percona-xtrabackup/build
-
-            # First, try to skip abi_check by touching its target files
-            touch abi_check.out || true
-
-            # Then build normally
-            if make -j$(nproc) 2>&1 | tee /tmp/build.log; then
-              echo "✓ Build successful!"
-            else
-              # Check if xtrabackup binary was built despite errors
-              if [ -f storage/innobase/xtrabackup/xtrabackup ]; then
-                echo "⚠ Build had errors but xtrabackup binary was created"
-                ls -lah storage/innobase/xtrabackup/xtrabackup
-                file storage/innobase/xtrabackup/xtrabackup
-              else
-                echo "✗ Build failed - showing errors:"
-                tail -100 /tmp/build.log | grep -A 10 "error:"
-                exit 1
-              fi
-            fi
+            make -j$(nproc)
 
             echo "=== Build completed successfully ==="
             ls -lah storage/innobase/xtrabackup/xtrabackup
