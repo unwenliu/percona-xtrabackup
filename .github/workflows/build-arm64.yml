@@ -22,6 +22,7 @@ jobs:
         with:
           ref: ${{ env.XTRABACKUP_VERSION }}
           fetch-depth: 0
+          submodules: recursive
 
       - name: Display version and system info
         run: |
@@ -118,6 +119,7 @@ jobs:
                   -DWITH_MAN_PAGES=OFF \
                   -DDOWNLOAD_BOOST=1 \
                   -DWITH_BOOST=${BOOST_DIR} \
+                  -DWITHOUT_COMPONENT_DEMOS=ON \
                   ..
 
             echo "=== Building with make ==="
