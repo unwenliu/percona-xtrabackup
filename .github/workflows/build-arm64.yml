@@ -80,6 +80,7 @@ jobs:
               libgcrypt-devel \
               libcurl-devel \
               libev-devel \
+              procps-devel \
               python3-sphinx \
               vim-common \
               git \
