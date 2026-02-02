@@ -164,8 +164,8 @@ jobs:
                   -DWITH_MAN_PAGES=OFF \
                   -S .. -B .
 
-            echo "=== Building with make ==="
-            make -j$(nproc)
+            echo "=== Building with make (single process) ==="
+            make -j1
 
             echo "=== Build completed successfully ==="
             ls -lah storage/innobase/xtrabackup/xtrabackup
