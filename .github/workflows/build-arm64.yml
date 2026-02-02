@@ -119,8 +119,11 @@ jobs:
                   -DWITH_MAN_PAGES=OFF \
                   -DDOWNLOAD_BOOST=1 \
                   -DWITH_BOOST=${BOOST_DIR} \
-                  -DIGNORE_ABI_CHECK=1 \
                   ..
+
+            echo "=== Removing ABI check files ==="
+            rm -f /workspace/percona-xtrabackup/include/mysql/*.pp
+            rm -f /workspace/percona-xtrabackup/build/abi_check.out
 
             echo "=== Building with make ==="
             make -j$(nproc)
