@@ -103,6 +103,9 @@ jobs:
             set -e
             cd /workspace/percona-xtrabackup
 
+            echo "=== Fixing git ownership and safe directory ==="
+            git config --global --add safe.directory /workspace/percona-xtrabackup
+
             echo "=== Initializing git submodules ==="
             git submodule update --init --recursive
 
