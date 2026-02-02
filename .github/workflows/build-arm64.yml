@@ -162,31 +162,13 @@ jobs:
             yum install -y scl-utils scl-utils-build
 
             # Add Aliyun Rocky Linux 8 BaseOS repo
-            cat > /etc/yum.repos.d/aliyun-rocky8-baseos.repo <<'EOF'
-[aliyun-rocky8-baseos]
-name=Aliyun Rocky Linux 8 BaseOS
-baseurl=https://mirrors.aliyun.com/rockylinux/8/BaseOS/aarch64/os/
-enabled=1
-gpgcheck=0
-EOF
+            printf "[aliyun-rocky8-baseos]\\nname=Aliyun Rocky Linux 8 BaseOS\\nbaseurl=https://mirrors.aliyun.com/rockylinux/8/BaseOS/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/aliyun-rocky8-baseos.repo
 
             # Add Aliyun Rocky Linux 8 AppStream repo
-            cat > /etc/yum.repos.d/aliyun-rocky8-appstream.repo <<'EOF'
-[aliyun-rocky8-appstream]
-name=Aliyun Rocky Linux 8 AppStream
-baseurl=https://mirrors.aliyun.com/rockylinux/8/AppStream/aarch64/os/
-enabled=1
-gpgcheck=0
-EOF
+            printf "[aliyun-rocky8-appstream]\\nname=Aliyun Rocky Linux 8 AppStream\\nbaseurl=https://mirrors.aliyun.com/rockylinux/8/AppStream/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/aliyun-rocky8-appstream.repo
 
             # Add Aliyun Rocky Linux 8 Devel repo (for gcc-toolset)
-            cat > /etc/yum.repos.d/aliyun-rocky8-devel.repo <<'EOF'
-[aliyun-rocky8-devel]
-name=Aliyun Rocky Linux 8 Devel
-baseurl=https://mirrors.aliyun.com/rockylinux/8/Devel/aarch64/os/
-enabled=1
-gpgcheck=0
-EOF
+            printf "[aliyun-rocky8-devel]\\nname=Aliyun Rocky Linux 8 Devel\\nbaseurl=https://mirrors.aliyun.com/rockylinux/8/Devel/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/aliyun-rocky8-devel.repo
 
             # Clean and rebuild cache
             yum clean all
