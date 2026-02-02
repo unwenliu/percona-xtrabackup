@@ -157,6 +157,17 @@ jobs:
             mkdir -p build
             cd build
 
+            echo "=== Installing GCC Toolset 11 ==="
+            yum install -y kylin-release scl-utils scl-utils-build
+            yum install -y gcc-toolset-11-gcc gcc-toolset-11-gcc-c++
+
+            echo "=== Enabling GCC 11 ==="
+            source /opt/rh/gcc-toolset-11/enable
+            source scl_source enable gcc-toolset-11
+
+            echo "=== Verifying GCC version ==="
+            gcc -v
+
             echo "=== Running CMake configuration ==="
             cmake -DWITH_BOOST=/workspace/boost \
                   -DDOWNLOAD_BOOST=ON \
