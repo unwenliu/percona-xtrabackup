@@ -1,0 +1,220 @@
+name: Build Percona XtraBackup for ARM64
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'XtraBackup version tag (e.g., percona-xtrabackup-8.0.35-35)'
+        required: true
+        default: 'percona-xtrabackup-8.0.35-35'
+
+env:
+  XTRABACKUP_VERSION: ${{ inputs.version || 'percona-xtrabackup-8.0.35-35' }}
+  BASE_IMAGE: hxsoong/kylin:v10-sp3
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-latest-arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.XTRABACKUP_VERSION }}
+          fetch-depth: 0
+
+      - name: Display version and system info
+        run: |
+          echo "=== Build Information ==="
+          echo "Building Percona XtraBackup version: ${{ env.XTRABACKUP_VERSION }}"
+          echo "Git tag/commit: $(git describe --tags --always)"
+          echo ""
+          echo "=== System Information ==="
+          uname -a
+          echo ""
+          echo "=== CPU Architecture ==="
+          arch
+          lscpu | grep -E "Architecture|CPU\(s\)|Model name"
+          echo ""
+          echo "=== XB_VERSION ==="
+          cat XB_VERSION
+
+      - name: Set up Docker
+        run: |
+          # Docker 应该已经预装在 ARM64 runner 上
+          docker version
+
+      - name: Pull base image
+        run: |
+          echo "Pulling base image: ${{ env.BASE_IMAGE }}"
+          docker pull ${{ env.BASE_IMAGE }}
+
+      - name: Create build container
+        run: |
+          docker create --name xtrabackup-builder \
+            -v ${{ github.workspace }}:/workspace/percona-xtrabackup \
+            ${{ env.BASE_IMAGE }} \
+            sleep infinity
+
+          docker start xtrabackup-builder
+
+      - name: Install build dependencies in container
+        run: |
+          docker exec xtrabackup-builder bash -c '
+            set -e
+            echo "=== Updating package lists ==="
+            yum makecache --timer
+
+            echo "=== Installing build dependencies ==="
+            yum install -y \
+              gcc \
+              gcc-c++ \
+              cmake \
+              make \
+              bison \
+              flex \
+              libaio-devel \
+              libaio \
+              ncurses-devel \
+              zlib-devel \
+              libgcrypt-devel \
+              libcurl-devel \
+              libev-devel \
+              python3-sphinx \
+              vim-common \
+              git \
+              perl \
+              perl-JSON \
+              perl-Time-HiRes \
+              openssl-devel
+
+            echo "=== Verifying installations ==="
+            gcc --version
+            cmake --version
+            make --version
+          '
+
+      - name: Build Percona XtraBackup in container
+        run: |
+          docker exec xtrabackup-builder bash -c '
+            set -e
+            cd /workspace/percona-xtrabackup
+
+            echo "=== Creating build directory ==="
+            mkdir -p build
+            cd build
+
+            echo "=== Running CMake configuration ==="
+            cmake -DBUILD_CONFIG=xtrabackup_release \
+                  -DCMAKE_INSTALL_PREFIX=/usr/local/xtrabackup \
+                  -DWITH_MAN_PAGES=OFF \
+                  ..
+
+            echo "=== Building with make ==="
+            make -j$(nproc)
+
+            echo "=== Build completed successfully ==="
+            ls -lah storage/innobase/xtrabackup/xtrabackup
+            file storage/innobase/xtrabackup/xtrabackup
+          '
+
+      - name: Prepare package
+        run: |
+          docker exec xtrabackup-builder bash -c '
+            set -e
+            cd /workspace/percona-xtrabackup/build
+
+            echo "=== Installing to staging directory ==="
+            make install DESTDIR=/workspace/staging
+
+            echo "=== Creating tar.gz package ==="
+            cd /workspace
+            VERSION="${{ env.XTRABACKUP_VERSION }}"
+            PACKAGE_NAME="percona-xtrabackup-${VERSION}-linux-arm64"
+
+            # Create package directory
+            mkdir -p "${PACKAGE_NAME}"
+
+            # Copy installed files
+            cp -r staging/usr/local/xtrabackup/* "${PACKAGE_NAME}/"
+
+            # Create tar.gz
+            tar -czf "${PACKAGE_NAME}.tar.gz" "${PACKAGE_NAME}"
+
+            # Calculate checksums
+            sha256sum "${PACKAGE_NAME}.tar.gz" > "${PACKAGE_NAME}.tar.gz.sha256"
+            md5sum "${PACKAGE_NAME}.tar.gz" > "${PACKAGE_NAME}.tar.gz.md5"
+
+            echo "=== Package contents ==="
+            ls -lah "${PACKAGE_NAME}/"
+
+            echo "=== Package files ==="
+            ls -lah /workspace/*.tar.gz*
+          '
+
+      - name: Copy artifacts from container
+        run: |
+          docker cp xtrabackup-builder:/workspace/*.tar.gz ${{ github.workspace }}/
+          docker cp xtrabackup-builder:/workspace/*.tar.gz.sha256 ${{ github.workspace }}/
+          docker cp xtrabackup-builder:/workspace/*.tar.gz.md5 ${{ github.workspace }}/
+
+      - name: Display build artifacts
+        run: |
+          echo "=== Build Artifacts ==="
+          ls -lah *.tar.gz*
+          echo ""
+          echo "=== SHA256 Checksum ==="
+          cat *.sha256
+          echo ""
+          echo "=== MD5 Checksum ==="
+          cat *.md5
+          echo ""
+          echo "=== Binary architecture ==="
+          tar -xzf percona-xtrabackup-*-linux-arm64.tar.gz --to-stdout \
+            percona-xtrabackup-*-linux-arm64/bin/xtrabackup | file -
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: percona-xtrabackup-${{ env.XTRABACKUP_VERSION }}-linux-arm64
+          path: |
+            *.tar.gz
+            *.tar.gz.sha256
+            *.tar.gz.md5
+          retention-days: 90
+
+      - name: Create Release Summary
+        run: |
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          # Percona XtraBackup Build Summary
+
+          ## Build Information
+          - **Version**: ${{ env.XTRABACKUP_VERSION }}
+          - **Base Image**: ${{ env.BASE_IMAGE }}
+          - **Target Architecture**: linux/arm64
+          - **Runner**: ubuntu-latest-arm64
+          - **Build Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+          ## Artifacts
+          The following packages have been created:
+
+          | File | Size |
+          |------|------|
+          $(ls -lh *.tar.gz | awk "{print "| **"$9"** | "$5" |}") |
+          $(ls -lh *.tar.gz.sha256 | awk "{print "| **"$9"** | "$5" |}") |
+          $(ls -lh *.tar.gz.md5 | awk "{print "| **"$9"** | "$5" |}") |
+
+          ## Checksums
+          \`\`\`
+          $(cat *.sha256)
+          \`\`\`
+
+          ## Download
+          Artifacts are available in the Actions artifacts section.
+          EOF
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop xtrabackup-builder || true
+          docker rm xtrabackup-builder || true
