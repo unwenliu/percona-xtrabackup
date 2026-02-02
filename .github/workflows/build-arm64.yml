@@ -157,13 +157,39 @@ jobs:
             mkdir -p build
             cd build
 
-            echo "=== Installing GCC Toolset 11 ==="
-            yum install -y kylin-release scl-utils scl-utils-build
-            yum install -y gcc-toolset-11-gcc gcc-toolset-11-gcc-c++
+            echo "=== Installing GCC Toolset 12 from Aliyun CentOS 8 repo ==="
+            # Install required packages
+            yum install -y centos-release-stream
+            yum install -y scl-utils scl-utils-build
 
-            echo "=== Enabling GCC 11 ==="
-            source /opt/rh/gcc-toolset-11/enable
-            source scl_source enable gcc-toolset-11
+            # Add Aliyun CentOS 8 Stream AppStream repo for gcc-toolset-12
+            cat > /etc/yum.repos.d/aliyun-centos8-appstream.repo <<'EOF'
+[aliyun-centos8-appstream]
+name=Aliyun CentOS 8 AppStream
+baseurl=https://mirrors.aliyun.com/centos-stream/8/AppStream/aarch64/os/
+enabled=1
+gpgcheck=0
+EOF
+
+            # Add Aliyun CentOS 8 Stream BaseOS repo
+            cat > /etc/yum.repos.d/aliyun-centos8-baseos.repo <<'EOF'
+[aliyun-centos8-baseos]
+name=Aliyun CentOS 8 BaseOS
+baseurl=https://mirrors.aliyun.com/centos-stream/8/BaseOS/aarch64/os/
+enabled=1
+gpgcheck=0
+EOF
+
+            # Clean and rebuild cache
+            yum clean all
+            yum makecache
+
+            # Install GCC Toolset 12
+            yum install -y gcc-toolset-12-gcc gcc-toolset-12-gcc-c++
+
+            echo "=== Enabling GCC 12 ==="
+            source /opt/rh/gcc-toolset-12/enable
+            source scl_source enable gcc-toolset-12
 
             echo "=== Verifying GCC version ==="
             gcc -v
