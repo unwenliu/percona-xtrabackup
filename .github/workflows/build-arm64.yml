@@ -157,25 +157,33 @@ jobs:
             mkdir -p build
             cd build
 
-            echo "=== Installing GCC Toolset 12 from Aliyun CentOS 8 repo ==="
+            echo "=== Installing GCC Toolset 12 from Aliyun Rocky Linux 8 repo ==="
             # Install required packages
-            yum install -y centos-release-stream
             yum install -y scl-utils scl-utils-build
 
-            # Add Aliyun CentOS 8 Stream AppStream repo for gcc-toolset-12
-            cat > /etc/yum.repos.d/aliyun-centos8-appstream.repo <<'EOF'
-[aliyun-centos8-appstream]
-name=Aliyun CentOS 8 AppStream
-baseurl=https://mirrors.aliyun.com/centos-stream/8/AppStream/aarch64/os/
+            # Add Aliyun Rocky Linux 8 BaseOS repo
+            cat > /etc/yum.repos.d/aliyun-rocky8-baseos.repo <<'EOF'
+[aliyun-rocky8-baseos]
+name=Aliyun Rocky Linux 8 BaseOS
+baseurl=https://mirrors.aliyun.com/rocky/8/BaseOS/aarch64/os/
 enabled=1
 gpgcheck=0
 EOF
 
-            # Add Aliyun CentOS 8 Stream BaseOS repo
-            cat > /etc/yum.repos.d/aliyun-centos8-baseos.repo <<'EOF'
-[aliyun-centos8-baseos]
-name=Aliyun CentOS 8 BaseOS
-baseurl=https://mirrors.aliyun.com/centos-stream/8/BaseOS/aarch64/os/
+            # Add Aliyun Rocky Linux 8 AppStream repo
+            cat > /etc/yum.repos.d/aliyun-rocky8-appstream.repo <<'EOF'
+[aliyun-rocky8-appstream]
+name=Aliyun Rocky Linux 8 AppStream
+baseurl=https://mirrors.aliyun.com/rocky/8/AppStream/aarch64/os/
+enabled=1
+gpgcheck=0
+EOF
+
+            # Add Aliyun Rocky Linux 8 Devel repo (for gcc-toolset)
+            cat > /etc/yum.repos.d/aliyun-rocky8-devel.repo <<'EOF'
+[aliyun-rocky8-devel]
+name=Aliyun Rocky Linux 8 Devel
+baseurl=https://mirrors.aliyun.com/rocky/8/Devel/aarch64/os/
 enabled=1
 gpgcheck=0
 EOF
