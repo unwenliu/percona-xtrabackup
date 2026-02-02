@@ -165,7 +165,7 @@ jobs:
             cat > /etc/yum.repos.d/aliyun-rocky8-baseos.repo <<'EOF'
 [aliyun-rocky8-baseos]
 name=Aliyun Rocky Linux 8 BaseOS
-baseurl=https://mirrors.aliyun.com/rocky/8/BaseOS/aarch64/os/
+baseurl=https://mirrors.aliyun.com/rockylinux/8/BaseOS/aarch64/os/
 enabled=1
 gpgcheck=0
 EOF
@@ -174,7 +174,7 @@ EOF
             cat > /etc/yum.repos.d/aliyun-rocky8-appstream.repo <<'EOF'
 [aliyun-rocky8-appstream]
 name=Aliyun Rocky Linux 8 AppStream
-baseurl=https://mirrors.aliyun.com/rocky/8/AppStream/aarch64/os/
+baseurl=https://mirrors.aliyun.com/rockylinux/8/AppStream/aarch64/os/
 enabled=1
 gpgcheck=0
 EOF
@@ -183,7 +183,7 @@ EOF
             cat > /etc/yum.repos.d/aliyun-rocky8-devel.repo <<'EOF'
 [aliyun-rocky8-devel]
 name=Aliyun Rocky Linux 8 Devel
-baseurl=https://mirrors.aliyun.com/rocky/8/Devel/aarch64/os/
+baseurl=https://mirrors.aliyun.com/rockylinux/8/Devel/aarch64/os/
 enabled=1
 gpgcheck=0
 EOF
