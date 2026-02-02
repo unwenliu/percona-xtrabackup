@@ -147,6 +147,11 @@ jobs:
             echo "=== Initializing git submodules ==="
             git submodule update --init --recursive
 
+            echo "=== Disabling ABI check for cross-platform build ==="
+            # Follow Homebrew approach: disable ABI check on Linux
+            # This prevents build failures when compiling on different platforms
+            sed -i.bak "s/SET(RUN_ABI_CHECK 1)/SET(RUN_ABI_CHECK 0)/" cmake/abi_check.cmake
+
             echo "=== Creating build directory ==="
             mkdir -p build
             cd build
