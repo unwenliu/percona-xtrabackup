@@ -119,7 +119,6 @@ jobs:
                   -DWITH_MAN_PAGES=OFF \
                   -DDOWNLOAD_BOOST=1 \
                   -DWITH_BOOST=${BOOST_DIR} \
-                  -DWITHOUT_COMPONENT_DEMOS=ON \
                   ..
 
             echo "=== Building with make ==="
