@@ -121,18 +121,25 @@ jobs:
                   -DWITH_BOOST=${BOOST_DIR} \
                   ..
 
-            echo "=== Building with make (keep-going on errors) ==="
+            echo "=== Building with make ==="
             cd /workspace/percona-xtrabackup/build
-            make -k -j$(nproc)
+            make -k -j$(nproc) 2>&1 | tee /tmp/build.log
 
-            echo "=== Checking if xtrabackup binary was built ==="
+            echo "=== Checking build status ==="
             if [ -f storage/innobase/xtrabackup/xtrabackup ]; then
-              echo "Build successful!"
+              echo "✓ Build successful! xtrabackup binary found"
               ls -lah storage/innobase/xtrabackup/xtrabackup
               file storage/innobase/xtrabackup/xtrabackup
             else
-              echo "Build failed - xtrabackup binary not found"
+              echo "✗ Build failed - xtrabackup binary not found"
+              echo "=== Build errors (last 50 lines) ==="
+              tail -50 /tmp/build.log
               exit 1
+            fi
+
+            # Also check for xbcloud binary
+            if [ -f storage/innobase/xtrabackup/xbcloud ]; then
+              echo "✓ xbcloud binary also built"
             fi
 
             echo "=== Build completed successfully ==="
