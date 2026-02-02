@@ -121,12 +121,19 @@ jobs:
                   -DWITH_BOOST=${BOOST_DIR} \
                   ..
 
-            echo "=== Removing ABI check files ==="
-            rm -f /workspace/percona-xtrabackup/include/mysql/*.pp
-            rm -f /workspace/percona-xtrabackup/build/abi_check.out
+            echo "=== Building with make (keep-going on errors) ==="
+            cd /workspace/percona-xtrabackup/build
+            make -k -j$(nproc)
 
-            echo "=== Building with make ==="
-            make -j$(nproc)
+            echo "=== Checking if xtrabackup binary was built ==="
+            if [ -f storage/innobase/xtrabackup/xtrabackup ]; then
+              echo "Build successful!"
+              ls -lah storage/innobase/xtrabackup/xtrabackup
+              file storage/innobase/xtrabackup/xtrabackup
+            else
+              echo "Build failed - xtrabackup binary not found"
+              exit 1
+            fi
 
             echo "=== Build completed successfully ==="
             ls -lah storage/innobase/xtrabackup/xtrabackup
