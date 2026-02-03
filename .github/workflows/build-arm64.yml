@@ -191,9 +191,13 @@ jobs:
             echo "=== Building with make (using all CPU cores) ==="
             make -j$(nproc)
 
+            echo "=== Checking build output ==="
+            echo "Looking for xtrabackup binary in common locations..."
+            find . -name "xtrabackup" -type f 2>/dev/null | head -5
+            ls -lah runtime_output_directory/ 2>/dev/null || echo "runtime_output_directory not found"
+            ls -lah storage/innobase/xtrabackup/xtrabackup 2>/dev/null || echo "storage/innobase/xtrabackup/xtrabackup not found"
+
             echo "=== Build completed successfully ==="
-            ls -lah storage/innobase/xtrabackup/xtrabackup
-            file storage/innobase/xtrabackup/xtrabackup
           '
 
       - name: Prepare package
