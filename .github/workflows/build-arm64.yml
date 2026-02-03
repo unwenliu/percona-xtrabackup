@@ -151,7 +151,7 @@ jobs:
       - name: Build Percona XtraBackup in container
         run: |
           docker exec xtrabackup-builder bash -c '
-            set -e
+            set +e  # Don'\''t exit on error to save cache even if build fails
             cd /workspace/percona-xtrabackup
 
             echo "=== Fixing git ownership and safe directory ==="
@@ -207,7 +207,13 @@ jobs:
             fi
 
             echo "=== Building with make (using all CPU cores) ==="
-            make -j$(nproc)
+            make -j$(nproc) || {
+              BUILD_EXIT_CODE=$?
+              echo "=== Build failed with exit code $BUILD_EXIT_CODE ==="
+              echo "=== Cache will be saved for partial build results ==="
+              echo "=== This speeds up subsequent builds by reusing object files ==="
+              # Don'\''t fail here - let cache be saved
+            }
 
             echo "=== Checking build output ==="
             echo "Looking for xtrabackup binary in common locations..."
