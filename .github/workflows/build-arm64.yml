@@ -49,9 +49,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/docker-image.tar
-          key: docker-image-${{ env.BASE_IMAGE }}-${{ hashFiles('.github/workflows/build-arm64.yml') }}
+          key: docker-image-${{ env.BASE_IMAGE }}
           restore-keys: |
-            docker-image-${{ env.BASE_IMAGE }}-
+            docker-image-
 
       - name: Pull base image
         run: |
@@ -88,9 +88,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/yum-cache
-          key: yum-cache-${{ env.BASE_IMAGE }}-${{ hashFiles('.github/workflows/build-arm64.yml') }}
+          key: yum-cache-${{ env.BASE_IMAGE }}
           restore-keys: |
-            yum-cache-${{ env.BASE_IMAGE }}-
+            yum-cache-
+
+      - name: Cache Boost library
+        uses: actions/cache@v4
+        with:
+          path: /workspace/boost
+          key: boost-cache-1.77.0
 
       - name: Install build dependencies in container
         run: |
