@@ -157,11 +157,11 @@ jobs:
             mkdir -p build
             cd build
 
-            echo "=== Installing GCC Toolset 12 from Rocky Linux 8 ==="
+            echo "=== Installing GCC Toolset 11 from Rocky Linux 8 ==="
             # Install SCL utilities
             yum install -y scl-utils scl-utils-build
 
-            # Add ONLY Rocky Linux 8 AppStream repo (contains gcc-toolset-12)
+            # Add ONLY Rocky Linux 8 AppStream repo (contains gcc-toolset-11)
             # Skip BaseOS to avoid conflicts with Kylin packages
             printf "[rocky8-appstream]\\nname=Rocky Linux 8 AppStream\\nbaseurl=https://dl.rockylinux.org/pub/rocky/8/AppStream/aarch64/os/\\nenabled=1\\ngpgcheck=0\\npriority=1\\n" > /etc/yum.repos.d/rocky8-appstream.repo
 
@@ -172,11 +172,11 @@ jobs:
             yum clean all
             yum makecache
 
-            # Install GCC Toolset 12 with --allowerasing to resolve conflicts
-            yum install -y --allowerasing gcc-toolset-12-gcc gcc-toolset-12-gcc-c++
+            # Install GCC Toolset 11 with --allowerasing to resolve conflicts
+            yum install -y --allowerasing gcc-toolset-11-gcc gcc-toolset-11-gcc-c++
 
-            echo "=== Enabling GCC 12 ==="
-            source /opt/rh/gcc-toolset-12/enable
+            echo "=== Enabling GCC 11 ==="
+            source /opt/rh/gcc-toolset-11/enable
 
             echo "=== Verifying GCC version ==="
             gcc -v
