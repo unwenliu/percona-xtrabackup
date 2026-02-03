@@ -157,29 +157,26 @@ jobs:
             mkdir -p build
             cd build
 
-            echo "=== Installing GCC Toolset 12 from Rocky Linux 8 official repo ==="
-            # Install required packages
+            echo "=== Installing GCC Toolset 12 from Rocky Linux 8 ==="
+            # Install SCL utilities
             yum install -y scl-utils scl-utils-build
 
-            # Add Rocky Linux 8 official BaseOS repo
-            printf "[rocky8-baseos]\\nname=Rocky Linux 8 BaseOS\\nbaseurl=https://dl.rockylinux.org/pub/rocky/8/BaseOS/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/rocky8-baseos.repo
+            # Add ONLY Rocky Linux 8 AppStream repo (contains gcc-toolset-12)
+            # Skip BaseOS to avoid conflicts with Kylin packages
+            printf "[rocky8-appstream]\\nname=Rocky Linux 8 AppStream\\nbaseurl=https://dl.rockylinux.org/pub/rocky/8/AppStream/aarch64/os/\\nenabled=1\\ngpgcheck=0\\npriority=1\\n" > /etc/yum.repos.d/rocky8-appstream.repo
 
-            # Add Rocky Linux 8 official AppStream repo
-            printf "[rocky8-appstream]\\nname=Rocky Linux 8 AppStream\\nbaseurl=https://dl.rockylinux.org/pub/rocky/8/AppStream/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/rocky8-appstream.repo
-
-            # Add Rocky Linux 8 official Devel repo (for gcc-toolset)
-            printf "[rocky8-devel]\\nname=Rocky Linux 8 Devel\\nbaseurl=https://dl.rockylinux.org/pub/rocky/8/Devel/aarch64/os/\\nenabled=1\\ngpgcheck=0\\n" > /etc/yum.repos.d/rocky8-devel.repo
+            # Add Rocky Linux 8 Devel repo
+            printf "[rocky8-devel]\\nname=Rocky Linux 8 Devel\\nbaseurl=https://dl.rockylinux.org/pub/rocky/8/Devel/aarch64/os/\\nenabled=1\\ngpgcheck=0\\npriority=1\\n" > /etc/yum.repos.d/rocky8-devel.repo
 
             # Clean and rebuild cache
             yum clean all
             yum makecache
 
-            # Install GCC Toolset 12
-            yum install -y gcc-toolset-12-gcc gcc-toolset-12-gcc-c++
+            # Install GCC Toolset 12 with --allowerasing to resolve conflicts
+            yum install -y --allowerasing gcc-toolset-12-gcc gcc-toolset-12-gcc-c++
 
             echo "=== Enabling GCC 12 ==="
             source /opt/rh/gcc-toolset-12/enable
-            source scl_source enable gcc-toolset-12
 
             echo "=== Verifying GCC version ==="
             gcc -v
