@@ -98,6 +98,12 @@ jobs:
           path: /workspace/boost
           key: boost-cache-1.77.0
 
+      - name: Cache build directory
+        uses: actions/cache@v4
+        with:
+          path: /workspace/percona-xtrabackup/build
+          key: build-cache-${{ runner.os }}-${{ env.XTRABACKUP_VERSION }}-v2
+
       - name: Install build dependencies in container
         run: |
           docker exec xtrabackup-builder bash -c '
@@ -188,11 +194,17 @@ jobs:
             gcc -v
 
             echo "=== Running CMake configuration ==="
-            cmake -DWITH_BOOST=/workspace/boost \
-                  -DDOWNLOAD_BOOST=ON \
-                  -DBUILD_CONFIG=xtrabackup_release \
-                  -DWITH_MAN_PAGES=OFF \
-                  -S .. -B .
+            # Only run CMake if not cached
+            if [ ! -f CMakeCache.txt ]; then
+              cmake -DWITH_BOOST=/workspace/boost \
+                    -DDOWNLOAD_BOOST=ON \
+                    -DBUILD_CONFIG=xtrabackup_release \
+                    -DWITH_MAN_PAGES=OFF \
+                    -S .. -B .
+              echo "=== CMake configuration completed ==="
+            else
+              echo "=== Using cached CMake configuration ==="
+            fi
 
             echo "=== Building with make (using all CPU cores) ==="
             make -j$(nproc)
