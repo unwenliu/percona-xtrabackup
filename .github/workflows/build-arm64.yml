@@ -263,33 +263,37 @@ jobs:
 
       - name: Copy artifacts from container
         run: |
-          docker cp xtrabackup-builder:/workspace/*.tar.gz ${{ github.workspace }}/
-          docker cp xtrabackup-builder:/workspace/*.tar.gz.sha256 ${{ github.workspace }}/
-          docker cp xtrabackup-builder:/workspace/*.tar.gz.md5 ${{ github.workspace }}/
+          # docker cp doesn't support wildcards, so we use docker exec with cat
+          docker exec xtrabackup-builder sh -c 'cat /workspace/*.tar.gz' > ${{ github.workspace }}/package.tar.gz
+          docker exec xtrabackup-builder sh -c 'cat /workspace/*.tar.gz.sha256' > ${{ github.workspace }}/package.tar.gz.sha256
+          docker exec xtrabackup-builder sh -c 'cat /workspace/*.tar.gz.md5' > ${{ github.workspace }}/package.tar.gz.md5
+
+          # Verify files were copied
+          ls -lah ${{ github.workspace }}/package.*
 
       - name: Display build artifacts
         run: |
           echo "=== Build Artifacts ==="
-          ls -lah *.tar.gz*
+          ls -lah package.*
           echo ""
           echo "=== SHA256 Checksum ==="
-          cat *.sha256
+          cat package.tar.gz.sha256
           echo ""
           echo "=== MD5 Checksum ==="
-          cat *.md5
+          cat package.tar.gz.md5
           echo ""
           echo "=== Binary architecture ==="
-          tar -xzf percona-xtrabackup-*-linux-arm64.tar.gz --to-stdout \
-            percona-xtrabackup-*-linux-arm64/bin/xtrabackup | file -
+          tar -xzf package.tar.gz --to-stdout \
+            percona-xtrabackup-*-linux-arm64/bin/xtrabackup 2>/dev/null | file - || echo "Warning: Could not extract binary for verification"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: percona-xtrabackup-${{ env.XTRABACKUP_VERSION }}-linux-arm64
           path: |
-            *.tar.gz
-            *.tar.gz.sha256
-            *.tar.gz.md5
+            package.tar.gz
+            package.tar.gz.sha256
+            package.tar.gz.md5
           retention-days: 90
 
       - name: Create Release Summary
@@ -309,13 +313,13 @@ jobs:
 
           | File | Size |
           |------|------|
-          $(ls -lh *.tar.gz | awk "{print "| **"$9"** | "$5" |}") |
-          $(ls -lh *.tar.gz.sha256 | awk "{print "| **"$9"** | "$5" |}") |
-          $(ls -lh *.tar.gz.md5 | awk "{print "| **"$9"** | "$5" |}") |
+          | **package.tar.gz** | $(du -h package.tar.gz | cut -f1) |
+          | **package.tar.gz.sha256** | $(du -h package.tar.gz.sha256 | cut -f1) |
+          | **package.tar.gz.md5** | $(du -h package.tar.gz.md5 | cut -f1) |
 
           ## Checksums
           \`\`\`
-          $(cat *.sha256)
+          $(cat package.tar.gz.sha256)
           \`\`\`
 
           ## Download
